@@ -32,15 +32,6 @@ namespace KeyOverlay
             var config = ReadConfig();
             var general = config["General"];
 
-            var windowWidth = general["width"];
-            var windowHeight = general["height"];
-            _window = new RenderWindow(new VideoMode(uint.Parse(windowWidth!), uint.Parse(windowHeight!)),
-                "KeyOverlay", Styles.Default);
-
-            //calculate screen ratio relative to original program size for easy resizing
-            _ratioX = float.Parse(windowWidth) / 480f;
-            _ratioY = float.Parse(windowHeight) / 960f;
-
             _barSpeed = float.Parse(general["barSpeed"], CultureInfo.InvariantCulture);
             _backgroundColor = CreateItems.CreateColor(general["backgroundColor"]);
             _maxFPS = uint.Parse(general["fps"]);
@@ -63,6 +54,15 @@ namespace KeyOverlay
             _outlineThickness = int.Parse(general["outlineThickness"]);
             var keySize = int.Parse(general["keySize"]);
             var margin = int.Parse(general["margin"]);
+
+            var windowWidth = (keySize + _outlineThickness * 2 + margin) * _keyList.Count + margin;
+            var windowHeight = general["height"];
+            _window = new RenderWindow(new VideoMode((uint)windowWidth, uint.Parse(windowHeight!)),
+                "KeyOverlay", Styles.Default);
+
+            //calculate screen ratio relative to original program size for easy resizing
+            _ratioX = windowWidth / 480f;
+            _ratioY = float.Parse(windowHeight) / 960f;
 
             _squareList = CreateItems.CreateKeys(_keyList, keySize, _ratioX, _ratioY, margin, _outlineThickness, _window);
             foreach (var square in _squareList) _staticDrawables.Add(square);

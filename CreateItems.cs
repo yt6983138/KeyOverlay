@@ -27,7 +27,7 @@ namespace KeyOverlay
             var yPos = 900 * ratioY;
             var width = size + outlineThickness * 2;
             var keyList = new List<RectangleShape>();
-            var spacing = (window.Size.X - margin * 2 - width * keyAmount) / (keyAmount - 1);
+
             for (int i = 0; i < keyAmount; i++)
             {
                 var square = new RectangleShape(new Vector2f(size, size));
@@ -36,7 +36,7 @@ namespace KeyOverlay
                 square.OutlineColor = keys[i]._color;
                 square.OutlineThickness = outlineThickness;
                 square.Origin = new Vector2f(0, size);
-                square.Position = new Vector2f(margin + outlineThickness + (width + spacing) * i, yPos);
+                square.Position = new Vector2f(margin + outlineThickness + (width + margin) * i, yPos);
                 keyList.Add(square);
             }
             return keyList;
