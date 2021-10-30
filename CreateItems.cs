@@ -20,9 +20,10 @@ namespace KeyOverlay
             return rect;
         }
 
-        public static List<RectangleShape> CreateKeys(int keyAmount, int outlineThickness, float size, float ratioX, float ratioY,
-            int margin, RenderWindow window, Color backgroundColor, Color outlineColor)
+        public static List<RectangleShape> CreateKeys(List<Key> keys, float size, float ratioX, float ratioY,
+            int margin, int outlineThickness, RenderWindow window)
         {
+            var keyAmount = keys.Count;
             var yPos = 900 * ratioY;
             var width = size + outlineThickness * 2;
             var keyList = new List<RectangleShape>();
@@ -30,12 +31,12 @@ namespace KeyOverlay
             for (int i = 0; i < keyAmount; i++)
             {
                 var square = new RectangleShape(new Vector2f(size, size));
-                
-                square.FillColor = backgroundColor;
-                square.OutlineColor = outlineColor;
+
+                square.FillColor = CreateColor("0,0,0,0");
+                square.OutlineColor = keys[i]._color;
                 square.OutlineThickness = outlineThickness;
                 square.Origin = new Vector2f(0, size);
-                square.Position = new Vector2f(margin +outlineThickness + (width + spacing ) * i , yPos); 
+                square.Position = new Vector2f(margin + outlineThickness + (width + spacing) * i, yPos);
                 keyList.Add(square);
             }
             return keyList;
@@ -48,16 +49,16 @@ namespace KeyOverlay
             text.Style = Text.Styles.Bold;
             text.FillColor = color;
             text.Origin = new Vector2f(text.GetLocalBounds().Width / 2f, 32 * square.Size.X / 140f);
-            if(counter)
+            if (counter)
                 text.Position = new Vector2f(square.GetGlobalBounds().Left + square.OutlineThickness + square.Size.X / 2f,
-                    square.GetGlobalBounds().Top + square.OutlineThickness + square.Size.Y +text.CharacterSize);
+                    square.GetGlobalBounds().Top + square.OutlineThickness + square.Size.Y + text.CharacterSize);
             else
                 text.Position = new Vector2f(square.GetGlobalBounds().Left + square.OutlineThickness + square.Size.X / 2f,
                     square.GetGlobalBounds().Top + square.OutlineThickness + square.Size.Y / 2f);
 
             return text;
         }
-        
+
         public static Color CreateColor(string s)
         {
             var bytes = s.Split(',').Select(int.Parse).Select(Convert.ToByte).ToArray();

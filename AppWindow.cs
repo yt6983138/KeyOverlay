@@ -13,16 +13,13 @@ namespace KeyOverlay
     {
         private readonly RenderWindow _window;
         private readonly List<Key> _keyList = new();
-        private readonly List<RectangleShape> _squareList;
+        private readonly List<RectangleShape> _squareList = new();
         private readonly float _barSpeed;
         private readonly float _ratioX;
         private readonly float _ratioY;
         private readonly int _outlineThickness;
         private readonly Color _backgroundColor;
-        private readonly Color _keyBackgroundColor;
-        private readonly Color _barColor;
         private readonly Color _fontColor;
-        private readonly Sprite _background;
         private readonly bool _fading;
         private readonly bool _counter;
         private readonly List<Drawable> _staticDrawables = new();
@@ -33,8 +30,10 @@ namespace KeyOverlay
         public AppWindow()
         {
             var config = ReadConfig();
-            var windowWidth = config["windowWidth"];
-            var windowHeight = config["windowHeight"];
+            var general = config["General"];
+
+            var windowWidth = general["width"];
+            var windowHeight = general["height"];
             _window = new RenderWindow(new VideoMode(uint.Parse(windowWidth!), uint.Parse(windowHeight!)),
                 "KeyOverlay", Styles.Default);
 
@@ -42,66 +41,68 @@ namespace KeyOverlay
             _ratioX = float.Parse(windowWidth) / 480f;
             _ratioY = float.Parse(windowHeight) / 960f;
 
-            _barSpeed = float.Parse(config["barSpeed"], CultureInfo.InvariantCulture);
-            _outlineThickness = int.Parse(config["outlineThickness"]);
-            _backgroundColor = CreateItems.CreateColor(config["backgroundColor"]);
-            _keyBackgroundColor = CreateItems.CreateColor(config["keyColor"]);
-            _barColor = CreateItems.CreateColor(config["barColor"]);
-            _maxFPS = uint.Parse(config["maxFPS"]);
-
-            //get background image if in config
-            if (config["backgroundImage"] != "")
-                _background = new Sprite(new Texture(
-                    Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "Resources",
-                        config["backgroundImage"]))));
+            _barSpeed = float.Parse(general["barSpeed"], CultureInfo.InvariantCulture);
+            _backgroundColor = CreateItems.CreateColor(general["backgroundColor"]);
+            _maxFPS = uint.Parse(general["fps"]);
 
             //create keys which will be used to create the squares and text
-            var keyAmount = int.Parse(config["keyAmount"]);
-            for (var i = 1; i <= keyAmount; i++)
-                try
-                {
-                    var key = new Key(config[$"key" + i]);
-                    if (config.ContainsKey($"displayKey" + i))
-                        if (config[$"displayKey" + i] != "")
-                            key.KeyLetter = config[$"displayKey" + i];
-                    _keyList.Add(key);
-                }
-                catch (InvalidOperationException e)
-                {
-                    //invalid key
-                    Console.WriteLine(e.Message);
-                    using var sw = new StreamWriter("keyErrorMessage.txt");
-                    sw.WriteLine(e.Message);
-                }
+            foreach (var item in config["Keys"])
+            {
+                var key = new Key(item.Value);
+
+                if (config["Display"].ContainsKey(item.Key))
+                    key.setKeyLetter(config["Display"][item.Key]);
+
+                if (config["Colors"].ContainsKey(item.Key))
+                    key.setColor(CreateItems.CreateColor(config["Colors"][item.Key]));
+
+                _keyList.Add(key);
+            }
 
             //create squares and add them to _staticDrawables list
-            var outlineColor = CreateItems.CreateColor(config["borderColor"]);
-            var keySize = int.Parse(config["keySize"]);
-            var margin = int.Parse(config["margin"]);
-            _squareList = CreateItems.CreateKeys(keyAmount, _outlineThickness, keySize, _ratioX, _ratioY, margin,
-                _window, _keyBackgroundColor, outlineColor);
+            _outlineThickness = int.Parse(general["outlineThickness"]);
+            var keySize = int.Parse(general["keySize"]);
+            var margin = int.Parse(general["margin"]);
+
+            _squareList = CreateItems.CreateKeys(_keyList, keySize, _ratioX, _ratioY, margin, _outlineThickness, _window);
             foreach (var square in _squareList) _staticDrawables.Add(square);
 
-            //create text and add it ti _staticDrawables list
-            _fontColor = CreateItems.CreateColor(config["fontColor"]);
-            for (var i = 0; i < keyAmount; i++)
+            // //create text and add it to _staticDrawables list
+            _fontColor = new Color(255, 255, 255, 255);
+            for (var i = 0; i < _keyList.Count; i++)
             {
-                var text = CreateItems.CreateText(_keyList.ElementAt(i).KeyLetter, _squareList.ElementAt(i),
-                    _fontColor, false);
+                var text = CreateItems.CreateText(_keyList[i].KeyLetter, _squareList[i], _fontColor, false);
                 _staticDrawables.Add(text);
             }
 
-            if (config["fading"] == "yes")
+            if (general["fading"] == "yes")
                 _fading = true;
-            if (config["keyCounter"] == "yes")
+            if (general["counter"] == "yes")
                 _counter = true;
         }
 
-        private Dictionary<string, string> ReadConfig()
+        private Dictionary<string, Dictionary<string, string>> ReadConfig()
         {
-            var objectDict = new Dictionary<string, string>();
-            var file = File.ReadLines("config.txt").ToArray();
-            foreach (var s in file) objectDict.Add(s.Split("=")[0], s.Split("=")[1]);
+            var objectDict = new Dictionary<string, Dictionary<string, string>>();
+            var file = File.ReadLines("config.ini").ToArray();
+            var current = "";
+            foreach (var line in file)
+            {
+                Console.WriteLine(line);
+                if (line == "") continue;
+                if (line.StartsWith("["))
+                {
+                    current = line.Substring(1, line.Length - 2);
+                    objectDict.Add(current, new());
+                }
+                else
+                {
+                    var key = line.Split('=')[0];
+                    var value = line.Split('=')[1];
+                    objectDict[current].Add(key, value);
+                }
+
+            }
             return objectDict;
         }
 
@@ -130,43 +131,44 @@ namespace KeyOverlay
             {
                 _window.Clear(_backgroundColor);
                 _window.DispatchEvents();
-                //if no keys are being held fill the square with bg color
-                foreach (var square in _squareList) square.FillColor = _keyBackgroundColor;
-                //if a key is being held, change the key bg and increment hold variable of key
-                foreach (var key in _keyList)
+                // //if no keys are being held fill the square with bg color
+                for (var i = 0; i < _keyList.Count; i++)
+                {
+                    var key = _keyList[i];
+
                     if (key.isKey && Keyboard.IsKeyPressed(key.KeyboardKey) ||
                         !key.isKey && Mouse.IsButtonPressed(key.MouseButton))
                     {
                         key.Hold++;
-                        _squareList.ElementAt(_keyList.IndexOf(key)).FillColor = _barColor;
+                        _squareList[i].FillColor = key._colorPressed;
                     }
                     else
                     {
                         key.Hold = 0;
+                        _squareList[i].FillColor = _backgroundColor;
                     }
+                }
 
                 MoveBars(_keyList, _squareList);
 
-                //draw bg from image if not null
-
-                if (_background is not null)
-                    _window.Draw(_background);
                 foreach (var staticDrawable in _staticDrawables) _window.Draw(staticDrawable);
 
-                foreach (var key in _keyList)
+                for (var i = 0; i < _keyList.Count; i++)
                 {
+                    var key = _keyList[i];
+
                     if (_counter)
                     {
-                        var text = CreateItems.CreateText(Convert.ToString(key.Counter),
-                            _squareList.ElementAt(_keyList.IndexOf(key)),
-                            _fontColor, true);
+                        var text = CreateItems.CreateText(
+                            Convert.ToString(key.Counter),
+                            _squareList[i],
+                            Color.White,
+                            true
+                        );
                         _window.Draw(text);
                     }
-
-                    foreach (var bar in key.BarList)
-                        _window.Draw(bar);
+                    foreach (var bar in key.BarList) _window.Draw(bar);
                 }
-
                 _window.Draw(fadingSprite);
 
                 _window.Display();

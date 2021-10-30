@@ -14,9 +14,12 @@ namespace KeyOverlay
         public readonly Mouse.Button MouseButton;
         public int Counter = 0;
         public readonly bool isKey = true;
+        public Color _color;
+        public Color _colorPressed;
 
         public Key(string key)
         {
+            setColor(Color.White);
             KeyLetter = key;
             if (!Enum.TryParse(key, out KeyboardKey))
             {
@@ -25,9 +28,7 @@ namespace KeyOverlay
                     KeyLetter = KeyLetter.Remove(0, 1);
                 }
                 if (Enum.TryParse(key.Substring(1), out MouseButton))
-                //if(!Enum.TryParse(key, out MouseButton))
                 {
-                    //KeyLetter = key.Substring(1);
                     isKey = false;
                 }
                 else
@@ -37,6 +38,17 @@ namespace KeyOverlay
                 }
 
             }
+        }
+
+        public void setKeyLetter(string key)
+        {
+            KeyLetter = key;
+        }
+
+        public void setColor(Color c)
+        {
+            _color = c;
+            _colorPressed = new Color(c.R, c.G, c.B, (byte)(c.A / 1.618));
         }
     }
 }
