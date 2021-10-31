@@ -21,22 +21,24 @@ namespace KeyOverlay
         }
 
         public static List<RectangleShape> CreateKeys(List<Key> keys, float size, float ratioX, float ratioY,
-            int margin, int outlineThickness, RenderWindow window)
+            int margin, int outlineThickness)
         {
             var keyAmount = keys.Count;
+            var xPos = margin + outlineThickness;
             var yPos = 900 * ratioY;
-            var width = size + outlineThickness * 2;
             var keyList = new List<RectangleShape>();
 
-            for (int i = 0; i < keyAmount; i++)
+            foreach (var key in keys)
             {
-                var square = new RectangleShape(new Vector2f(size, size));
+                var square = new RectangleShape(new Vector2f(size * key._size, size));
+                var width = (int)(size * key._size);
 
                 square.FillColor = CreateColor("0,0,0,0");
-                square.OutlineColor = keys[i]._color;
+                square.OutlineColor = key._color;
                 square.OutlineThickness = outlineThickness;
                 square.Origin = new Vector2f(0, size);
-                square.Position = new Vector2f(margin + outlineThickness + (width + margin) * i, yPos);
+                square.Position = new Vector2f(xPos, yPos);
+                xPos += width + outlineThickness * 2 + margin;
                 keyList.Add(square);
             }
             return keyList;
@@ -45,10 +47,10 @@ namespace KeyOverlay
         public static Text CreateText(string key, RectangleShape square, Color color, bool counter)
         {
             var text = new Text(key, _font);
-            text.CharacterSize = (uint)(50 * square.Size.X / 140);
+            text.CharacterSize = (uint)(50 * square.Size.Y / 140);
             text.Style = Text.Styles.Bold;
             text.FillColor = color;
-            text.Origin = new Vector2f(text.GetLocalBounds().Width / 2f, 32 * square.Size.X / 140f);
+            text.Origin = new Vector2f(text.GetLocalBounds().Width / 2f, 32 * square.Size.Y / 140f);
             if (counter)
                 text.Position = new Vector2f(square.GetGlobalBounds().Left + square.OutlineThickness + square.Size.X / 2f,
                     square.GetGlobalBounds().Top + square.OutlineThickness + square.Size.Y + text.CharacterSize);

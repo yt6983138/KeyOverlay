@@ -16,6 +16,7 @@ namespace KeyOverlay
         public readonly bool isKey = true;
         public Color _color;
         public Color _colorPressed;
+        public uint _size = 1;
 
         public Key(string key)
         {
@@ -49,6 +50,11 @@ namespace KeyOverlay
         {
             _color = c;
             _colorPressed = new Color(c.R, c.G, c.B, (byte)(c.A / 1.618));
+        }
+
+        public void setSize(uint size)
+        {
+            _size = size;
         }
     }
 }

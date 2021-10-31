@@ -30,6 +30,7 @@ namespace KeyOverlay
         public AppWindow()
         {
             var config = ReadConfig();
+            CheckConfig(config);
             var general = config["General"];
 
             _barSpeed = float.Parse(general["barSpeed"], CultureInfo.InvariantCulture);
@@ -47,6 +48,9 @@ namespace KeyOverlay
                 if (config["Colors"].ContainsKey(item.Key))
                     key.setColor(CreateItems.CreateColor(config["Colors"][item.Key]));
 
+                if (config["Size"].ContainsKey(item.Key))
+                    key.setSize(uint.Parse(config["Size"][item.Key]));
+
                 _keyList.Add(key);
             }
 
@@ -55,7 +59,11 @@ namespace KeyOverlay
             var keySize = int.Parse(general["keySize"]);
             var margin = int.Parse(general["margin"]);
 
-            var windowWidth = (keySize + _outlineThickness * 2 + margin) * _keyList.Count + margin;
+            var windowWidth = margin;
+            foreach (var key in _keyList)
+            {
+                windowWidth += keySize * (int)key._size + _outlineThickness * 2 + margin;
+            }
             var windowHeight = general["height"];
             _window = new RenderWindow(new VideoMode((uint)windowWidth, uint.Parse(windowHeight!)),
                 "KeyOverlay", Styles.Default);
@@ -64,7 +72,7 @@ namespace KeyOverlay
             _ratioX = windowWidth / 480f;
             _ratioY = float.Parse(windowHeight) / 960f;
 
-            _squareList = CreateItems.CreateKeys(_keyList, keySize, _ratioX, _ratioY, margin, _outlineThickness, _window);
+            _squareList = CreateItems.CreateKeys(_keyList, keySize, _ratioX, _ratioY, margin, _outlineThickness);
             foreach (var square in _squareList) _staticDrawables.Add(square);
 
             // //create text and add it to _staticDrawables list
@@ -104,6 +112,21 @@ namespace KeyOverlay
 
             }
             return objectDict;
+        }
+
+        private void CheckConfig(Dictionary<string, Dictionary<string, string>> config)
+        {
+
+            string[] required = { "General", "Keys" };
+            string[] optional = { "Display", "Size", "Color" };
+            foreach (var name in required)
+            {
+                if (!config.ContainsKey(name)) throw new InvalidDataException("Missing required data from config file");
+            }
+            foreach (var name in optional)
+            {
+                if (!config.ContainsKey(name)) config.Add(name, new());
+            }
         }
 
         private void OnClose(object sender, EventArgs e)
