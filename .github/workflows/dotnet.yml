@@ -15,7 +15,7 @@ on:
     - ".gitattributes"
     - "LICENSE"
     - "README.md"
-    
+
 jobs:
   build:
     strategy:
@@ -32,7 +32,7 @@ jobs:
         dotnet-version: 6.0.x
 
     - name: Build
-      run: dotnet build --configuration Release -o build
+      run: dotnet build --configuration Debug -o build
 
     - name: Upload
       uses: actions/upload-artifact@v3
