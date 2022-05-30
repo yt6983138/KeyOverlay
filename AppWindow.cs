@@ -114,8 +114,8 @@ namespace KeyOverlay
             _window.SetFramerateLimit(_maxFPS);
 
             //Creating a sprite for the fading effect
-            var fadingList = Fading.GetBackgroundColorFadingTexture(_backgroundColor, _window.Size.X, _ratioY);
-            var fadingTexture = new RenderTexture(_window.Size.X, (uint)(255 * 2 * _ratioY));
+            var fadingList = Fading.GetBackgroundColorFadingTexture(_backgroundColor, _size.X, _ratioY);
+            var fadingTexture = new RenderTexture(_size.X, (uint)(255 * 2 * _ratioY));
             fadingTexture.Clear(Color.Transparent);
             if (_fading)
                 foreach (var sprite in fadingList)
