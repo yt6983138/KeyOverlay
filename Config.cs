@@ -54,7 +54,7 @@ namespace KeyOverlay
         private void Check()
         {
             string[] required = { "General", "Keys" };
-            string[] optional = { "Display", "Size", "Color" };
+            string[] optional = { "Display", "Size", "Colors" };
             foreach (var name in required)
             {
                 if (!config.ContainsKey(name)) throw new InvalidDataException("Missing required data from config file");
@@ -66,6 +66,7 @@ namespace KeyOverlay
         }
         public void Load()
         {
+            config = new();
             Read();
             Check();
         }
