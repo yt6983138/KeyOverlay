@@ -1,60 +1,55 @@
-﻿using System;
-using System.Collections.Generic;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.Window;
+using System;
+using System.Collections.Generic;
 
-namespace KeyOverlay
+namespace KeyOverlay;
+
+public class Key
 {
-    public class Key
-    {
-        public int Hold { get; set; }
-        public List<RectangleShape> BarList = new();
-        public string KeyLetter = "";
-        public readonly Keyboard.Key KeyboardKey;
-        public readonly Mouse.Button MouseButton;
-        public int Counter = 0;
-        public readonly bool isKey = true;
-        public Color _color;
-        public Color _colorPressed;
-        public uint _size = 1;
+	private Color _color;
 
-        public Key(string key)
-        {
-            setColor(Color.White);
-            KeyLetter = key;
-            if (!Enum.TryParse(key, out KeyboardKey))
-            {
-                if (KeyLetter[0] == 'm')
-                {
-                    KeyLetter = KeyLetter.Remove(0, 1);
-                }
-                if (Enum.TryParse(key.Substring(1), out MouseButton))
-                {
-                    isKey = false;
-                }
-                else
-                {
-                    string exceptName = "Invalid key " + key;
-                    throw new InvalidOperationException(exceptName);
-                }
+	public int Hold { get; set; }
+	public List<RectangleShape> BarList { get; set; } = new();
+	public string KeyLetter { get; set; } = "";
+	public Keyboard.Key KeyboardKey { get; }
+	public Mouse.Button MouseButton { get; }
+	public int Counter { get; set; } = 0;
+	public bool IsKey { get; } = true;
+	public Color ColorPressed { get; private set; }
+	public Color Color
+	{
+		get => this._color;
+		set
+		{
+			this._color = value;
+			this.ColorPressed = new Color(value.R, value.G, value.B, (byte)(value.A / 1.618));
+		}
+	}
+	public uint Size { get; set; } = 1;
 
-            }
-        }
+	public Key(string key)
+	{
+		this.Color = Color.White;
+		this.KeyLetter = key;
+		if (!Enum.TryParse(key, out Keyboard.Key keyboardKey))
+		{
+			if (this.KeyLetter[0] == 'm')
+			{
+				this.KeyLetter = this.KeyLetter.Remove(0, 1);
+			}
+			if (Enum.TryParse(key[1..], out Mouse.Button mouseButton))
+			{
+				this.IsKey = false;
+				this.MouseButton = mouseButton;
+			}
+			else
+			{
+				string exceptName = "Invalid key " + key;
+				throw new InvalidOperationException(exceptName);
+			}
+		}
 
-        public void setKeyLetter(string key)
-        {
-            KeyLetter = key;
-        }
-
-        public void setColor(Color c)
-        {
-            _color = c;
-            _colorPressed = new Color(c.R, c.G, c.B, (byte)(c.A / 1.618));
-        }
-
-        public void setSize(uint size)
-        {
-            _size = size;
-        }
-    }
+		this.KeyboardKey = keyboardKey;
+	}
 }

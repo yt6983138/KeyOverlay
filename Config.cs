@@ -2,81 +2,84 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace KeyOverlay
+namespace KeyOverlay;
+
+public class Config
 {
-    public class Config
-    {
-        private string name;
-        private Dictionary<string, Dictionary<string, string>> config;
-        private FileSystemWatcher watcher;
-        private Action callback;
+	private readonly string _name;
+	private Dictionary<string, Dictionary<string, string>> _config;
+	private readonly FileSystemWatcher _watcher;
+	private readonly Action _callback;
 
-        public Config(string name, Action callback)
-        {
-            this.name = name;
-            this.callback = callback;
-            Load();
+	public Config(string name, Action callback)
+	{
+		this._config = null!; // suppress warning
 
-            watcher = new FileSystemWatcher();
-            watcher.Path = ".";
-            watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.LastAccess;
-            watcher.Filter = name;
-            watcher.Changed += new FileSystemEventHandler(OnChanged);
-            watcher.EnableRaisingEvents = true;
-        }
+		this._name = name;
+		this._callback = callback;
+		this.Load();
 
-        public Dictionary<string, string> this[string key] => config[key];
+		this._watcher = new FileSystemWatcher
+		{
+			Path = ".",
+			NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.LastAccess,
+			Filter = name
+		};
+		this._watcher.Changed += new FileSystemEventHandler(this.OnChanged);
+		this._watcher.EnableRaisingEvents = true;
+	}
 
-        private void Read()
-        {
-            var objectDict = new Dictionary<string, Dictionary<string, string>>();
-            var lines = File.ReadAllLines(name);
-            var current = "";
-            foreach (var line in lines)
-            {
-                if (line == "") continue;
-                if (line.StartsWith("["))
-                {
-                    current = line.Substring(1, line.Length - 2);
-                    objectDict.Add(current, new());
-                }
-                else
-                {
-                    var key = line.Split('=')[0];
-                    var value = line.Split('=')[1];
-                    objectDict[current].Add(key, value);
-                }
+	public Dictionary<string, string> this[string key] => this._config[key];
 
-            }
-            this.config = objectDict;
-        }
+	private void Read()
+	{
+		Dictionary<string, Dictionary<string, string>> objectDict = new();
+		string[] lines = File.ReadAllLines(this._name);
+		string current = "";
+		foreach (string line in lines)
+		{
+			if (line == "" || line.StartsWith("//")) continue;
+			if (line.StartsWith("["))
+			{
+				current = line[1..^1];
+				objectDict.Add(current, new());
+			}
+			else
+			{
+				string key = line.Split('=')[0];
+				string value = line.Split('=')[1];
+				objectDict[current].Add(key, value);
+			}
 
-        private void Check()
-        {
-            string[] required = { "General", "Keys" };
-            string[] optional = { "Display", "Size", "Colors" };
-            foreach (var name in required)
-            {
-                if (!config.ContainsKey(name)) throw new InvalidDataException("Missing required data from config file");
-            }
-            foreach (var name in optional)
-            {
-                if (!config.ContainsKey(name)) config.Add(name, new());
-            }
-        }
-        public void Load()
-        {
-            config = new();
-            Read();
-            Check();
-        }
+		}
+		this._config = objectDict;
+	}
 
-        private void OnChanged(object source, FileSystemEventArgs e)
-        {
-            // funky event *before* the file is actually saved
-            System.Threading.Thread.Sleep(100);
-            Load();
-            callback();
-        }
-    }
+	private void Check()
+	{
+		string[] required = { "General", "Keys" };
+		string[] optional = { "Display", "Size", "Colors" };
+		foreach (string name in required)
+		{
+			if (!this._config.ContainsKey(name)) throw new InvalidDataException("Missing required data from config file");
+		}
+		foreach (string name in optional)
+		{
+			if (!this._config.ContainsKey(name)) this._config.Add(name, new());
+		}
+	}
+	public void Load()
+	{
+		this._config = new();
+		this.Read();
+		this.Check();
+	}
+
+	private void OnChanged(object source, FileSystemEventArgs e)
+	{
+		// funky event *before* the file is actually saved
+		System.Threading.Thread.Sleep(100);
+		this.Load();
+		this._callback();
+	}
 }
