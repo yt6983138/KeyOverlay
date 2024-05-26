@@ -1,9 +1,10 @@
 
 # KeyOverlay
  A simple key overlay for osu! streaming
+# What's different
+I added: kps counter, hide hotkey (also transparent background doesnt really work bruh)
  
 Edit `config.ini` to set your keymap
-# [Download Link](https://github.com/Friedchicken-42/KeyOverlay/releases/tag/v2.2)
 IF YOU ARE HAVING PROBLEMS WITH THE PROGRAM WHEN OSU! IS ON FULLSCREEN, TRY USING GAME CAPTURE INSTEAD OF WINDOW CAPTURE IN OBS!
 
 
